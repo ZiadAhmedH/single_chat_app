@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:caht/feature/controller/chat_cubit.dart';
 import 'package:caht/feature/controller/chat_state.dart';
+import 'package:caht/feature/presentation/components/message_widget.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -10,7 +11,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   late final TextEditingController _controller;
-  
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -20,6 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -27,20 +30,42 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_controller.text.isNotEmpty) {
       context.read<ChatCubit>().sendMessage(_controller.text);
       _controller.clear();
+      _scrollToBottom();
     }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFE5E5E5),
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Color(0xFF075E54),
-        title: Text(
-          'Chat App',
-          style: TextStyle(color: Colors.white),
+        backgroundColor: Colors.black,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: AssetImage('assets/images/colouring.jpg'),
+            ),
+            SizedBox(width: 10),
+            Text(
+              'Username',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
-        elevation: 0,
+        elevation: 1,
       ),
       body: Column(
         children: [
@@ -48,84 +73,50 @@ class _ChatScreenState extends State<ChatScreen> {
             child: BlocBuilder<ChatCubit, ChatState>(
               builder: (context, state) {
                 return ListView.builder(
+                  controller: _scrollController,
+                  physics: BouncingScrollPhysics(),
                   itemCount: state.messages.length,
                   itemBuilder: (context, index) {
                     final message = state.messages[index];
-                    return Padding(
-                      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                      child: Align(
-                        alignment: message.isSender ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          width: MediaQuery.of(context).size.width / 2,
-                          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                          decoration: BoxDecoration(
-                            color: message.isSender ? Colors.green[400] : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 5,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                message.content,
-                                style: TextStyle(
-                                  color: message.isSender ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              Align(
-                                alignment: message.isSender ? Alignment.bottomRight : Alignment.bottomLeft,
-                                child: Text(
-                                  '12:30 PM', // You might want to add a real timestamp to your Message class
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
+                    return MessageWidget(message: message);
                   },
                 );
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            color: Colors.black,
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    child: TextField(
-                      controller: _controller,
-                      style: TextStyle(color: Colors.black),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your message',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                      ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Message...',
+                              hintStyle: TextStyle(color: Colors.grey[500]),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 IconButton(
                   icon: Icon(
                     Icons.send,
-                    color: Colors.green[400],
+                    color: Colors.blue,
                   ),
                   onPressed: _sendMessage,
                 ),

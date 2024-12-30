@@ -4,6 +4,8 @@ import 'package:caht/core/websocket.dart';
 import 'package:caht/feature/controller/chat_state.dart';
 import 'package:caht/feature/entities/message.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+
 
 class ChatCubit extends Cubit<ChatState> {
   final WebSocketService _webSocketService;
@@ -36,10 +38,11 @@ class ChatCubit extends Cubit<ChatState> {
         // Create a new Message object
         final newMessage = Message(
           content: messageData['message'],
-          isSender: messageData['clientId'] == clientId, senderId: '',
+          isSender: messageData['clientId'] == clientId, 
+          senderId: messageData['clientId'],
+          timesNow: messageData['timeNow'],
         );
 
-        // Update the state with the new message
         emit(state.addMessage(newMessage));
       } catch (e) {
         print('Error parsing message: $e');
@@ -51,19 +54,19 @@ class ChatCubit extends Cubit<ChatState> {
     final messageData = {
       'clientId': clientId,
       'message': message,
+      'timeNow': DateTime.now().toIso8601String(),
     };
     print('Sending message: $messageData');
     _webSocketService.sendMessage(jsonEncode(messageData)); 
 
-    // Add the sent message to the state
-    final newMessage = Message(content: message, isSender: true, senderId:clientId );
+    final newMessage = Message(content: message, isSender: true, senderId:clientId, timesNow: DateFormat('yyyy-MM-dd').format(DateTime.now()));
     emit(state.addMessage(newMessage));
   }
 
   Future<void> _initializeClientId() async {
     clientId = await ClientIdManager.getClientId();
     print('Client ID initialized: $clientId');
-    emit(ChatState.initial(clientId)); // Update the state with the client ID
+    emit(ChatState.initial(clientId)); 
   }
 
   @override
