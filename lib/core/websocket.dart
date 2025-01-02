@@ -4,7 +4,7 @@ class WebSocketService {
   late final WebSocketChannel channel;
 
   WebSocketService()  {
-    channel = WebSocketChannel.connect(Uri.parse('ws://192.168.220.82:8080'));
+    channel = WebSocketChannel.connect(Uri.parse('ws://192.168.1.5:8080'));
   }
 
   Stream get stream => channel.stream;

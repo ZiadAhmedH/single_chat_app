@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:caht/core/clientManger.dart';
 import 'package:caht/core/websocket.dart';
-import 'package:caht/feature/controller/chat_state.dart';
-import 'package:caht/feature/entities/message.dart';
+import 'package:caht/chat/controller/chat_state.dart';
+import 'package:caht/chat/entities/message.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -10,6 +11,8 @@ import 'package:intl/intl.dart';
 class ChatCubit extends Cubit<ChatState> {
   final WebSocketService _webSocketService;
   late String clientId;
+
+   final clientName = TextEditingController();
 
   ChatCubit(this._webSocketService) : super(ChatState.initial('')) {
     _initializeClientId();
@@ -35,14 +38,8 @@ class ChatCubit extends Cubit<ChatState> {
         final messageData = jsonDecode(decodedMessage); 
         print("Decoded message: $messageData");
 
-        // Create a new Message object
-        final newMessage = Message(
-          content: messageData['message'],
-          isSender: messageData['clientId'] == clientId, 
-          senderId: messageData['clientId'],
-          timesNow: messageData['timeNow'],
-        );
-
+        final newMessage = Message.fromJson(messageData);
+       emit(MassageAddedNotifiy(messages: state.messages, clientId: state.clientId));
         emit(state.addMessage(newMessage));
       } catch (e) {
         print('Error parsing message: $e');
@@ -54,12 +51,15 @@ class ChatCubit extends Cubit<ChatState> {
     final messageData = {
       'clientId': clientId,
       'message': message,
-      'timeNow': DateTime.now().toIso8601String(),
+      'clientName': clientName.text,
+      'timeNow': DateFormat('yyyy-MM').format(DateTime.now()).toString(),
+      
     };
+    
     print('Sending message: $messageData');
     _webSocketService.sendMessage(jsonEncode(messageData)); 
 
-    final newMessage = Message(content: message, isSender: true, senderId:clientId, timesNow: DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    final newMessage = Message(message: message, isSender: true,name: clientName.text, senderId:clientId, timeNow:DateFormat('yyyy-MM-dd').format(DateTime.now()).toString() );
     emit(state.addMessage(newMessage));
   }
 
@@ -68,6 +68,11 @@ class ChatCubit extends Cubit<ChatState> {
     print('Client ID initialized: $clientId');
     emit(ChatState.initial(clientId)); 
   }
+
+  void setClientName(String name) {
+    clientName.text = name;
+  }
+
 
   @override
   Future<void> close() {

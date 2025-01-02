@@ -1,10 +1,12 @@
-import 'package:caht/feature/entities/message.dart';
+import 'package:equatable/equatable.dart';
+import 'package:caht/chat/entities/message.dart';
 
-class ChatState {
-  final List<Message> messages; 
-  final String clientId; 
-  
-  ChatState({
+class ChatState extends Equatable {
+  final List<Message> messages;
+  final String clientId;
+
+
+  const ChatState({
     required this.messages,
     required this.clientId,
   });
@@ -25,11 +27,19 @@ class ChatState {
     );
   }
 
+
   factory ChatState.initial(String clientId) {
     return ChatState(
       messages: [],
       clientId: clientId,
     );
   }
+
+  @override
+  List<Object> get props => [messages, clientId];
+}
+
+  class MassageAddedNotifiy extends ChatState {
+  const MassageAddedNotifiy({required super.messages, required super.clientId});
 }
 

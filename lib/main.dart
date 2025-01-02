@@ -1,28 +1,24 @@
+import 'package:caht/chat/controller/chat_observer.dart';
+import 'package:caht/chat/presentation/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:caht/core/websocket.dart';
-import 'package:caht/feature/controller/chat_cubit.dart';
-import 'package:caht/feature/presentation/chat_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final webSocketService = WebSocketService();
-  
-  runApp(MyApp(webSocketService: webSocketService));
+  Bloc.observer = ChatObserver();
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final WebSocketService webSocketService;
 
-  MyApp({required this.webSocketService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ChatCubit(webSocketService),
-      child: MaterialApp(
-        home: ChatScreen(),
-      ),
+    return MaterialApp(
+      home: SpalshScreen(),
     );
   }
 }
